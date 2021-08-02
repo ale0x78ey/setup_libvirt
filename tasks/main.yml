@@ -1,3 +1,9 @@
+- name: setup_libvirt [debian] | update repositories cache
+  apt: update_cache=yes
+  become: yes
+  changed_when: False
+  when: ansible_os_family == "Debian"
+
 - name: setup_libvirt [debian] | install requirements
   package: name="{{ item }}"
   become: yes
@@ -36,12 +42,12 @@
 
 - name: setup_libvirt | download system image from S3
   amazon.aws.aws_s3:
-    bucket: "{{ bucket }}"
+    bucket: "{{ libvirt_bucket }}"
     object: "{{ item.image_src }}"
-    s3_url: "{{ s3_url }}"
-    region: "{{ region }}"
-    aws_access_key: "{{ access_key }}"
-    aws_secret_key: "{{ secret_key }}"
+    s3_url: "{{ libvirt_s3_url }}"
+    region: "{{ libvirt_region }}"
+    aws_access_key: "{{ libvirt_access_key }}"
+    aws_secret_key: "{{ libvirt_secret_key }}"
     dest: "{{ item.image_dst }}"
     mode: get
     overwrite: never

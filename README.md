@@ -5,10 +5,7 @@
 ```bash
 python3 -m venv .venv
 . .venv/bin/activate
-pip install -U wheel
-pip install -r requirements.txt
-ansible-galaxy collection install amazon.aws
-ansible-playbook -i inventories.d/hosts setup_libvirt.yml
+. setup.sh
 ```
 
 ## Install awscli
