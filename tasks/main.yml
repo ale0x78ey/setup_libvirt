@@ -44,17 +44,17 @@
     - "{{ libvirt_images }}"
     - [ "meta-data", "user-data" ]
 
-- name: setup_libvirt | download system image from S3
+- name: setup_libvirt | download resources
   amazon.aws.aws_s3:
     bucket: "{{ libvirt_bucket }}"
-    object: "{{ item.image_src }}"
+    object: "{{ item.src }}"
     s3_url: "{{ libvirt_s3_url }}"
     region: "{{ libvirt_region }}"
     aws_access_key: "{{ libvirt_access_key }}"
     aws_secret_key: "{{ libvirt_secret_key }}"
-    dest: "{{ item.image_dst }}"
+    dest: "{{ item.dst }}"
     mode: get
     overwrite: never
   ignore_errors: yes
   become: yes
-  with_items: "{{ libvirt_images }}"
+  with_items: "{{ libvirt_images | map(attribute='s3_resources') | flatten }}"

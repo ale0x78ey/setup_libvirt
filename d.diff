@@ -1,0 +1,26 @@
+diff --git a/templates/user-data.j2 b/templates/user-data.j2
+index 89df0fe..3a9b82b 100644
+--- a/templates/user-data.j2
++++ b/templates/user-data.j2
+@@ -4,6 +4,21 @@ preserve_hostname: False
+ hostname: {{ item[0].hostname }}
+ fqdn: "{{ item[0].hostname }}.{{ ansible_facts['nodename'] }}"
+ 
++system_info:
++  network:
++    version: 2
++    ethernets:
++      enp1s0:
++        dhcp4: true
++        match:
++          macaddress: 52:54:00:36:4e:b6
++        set-name: enp1s0
++      enp2s0:
++        dhcp4: false
++        match:
++          macaddress: 52:54:00:1a:bd:7f
++        set-name: enp2s0
++
+ users:
+ {% for user in item[0].users %}
+   - name: {{ user.name }}
