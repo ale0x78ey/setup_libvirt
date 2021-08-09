@@ -15,7 +15,7 @@
 - name: setup_libvirt [debian] | disable netfilter for bridges
   sysctl:
     name: "{{ item }}"
-    value: 0
+    value: "0"
     sysctl_file: /etc/sysctl.d/99-bridge.conf
     sysctl_set: yes
   become: yes
@@ -28,21 +28,10 @@
 - name: setup_libvirt | create /var/lib/libvirt/images/* directories
   file:
     path: "/var/lib/libvirt/images/{{ item.name }}"
-    mode: "644"
+    mode: "655"
     state: directory
-    recurse: yes
   become: yes
   with_items: "{{ libvirt_images }}"
-
-- name: setup_libvirt | configure /var/lib/libvirt/images/*/*
-  template:
-    src: "{{ item[1] }}.j2"
-    dest: "/var/lib/libvirt/images/{{item[0].name}}/{{ item[1] }}"
-    mode: "664"
-  become: yes
-  with_nested:
-    - "{{ libvirt_images }}"
-    - [ "meta-data", "user-data" ]
 
 - name: setup_libvirt | download resources
   amazon.aws.aws_s3:
@@ -58,3 +47,32 @@
   ignore_errors: yes
   become: yes
   with_items: "{{ libvirt_images | map(attribute='s3_resources') | flatten }}"
+
+- name: setup_libvirt | configure /var/lib/libvirt/images/*/{meta-data,user-data}
+  template:
+    src: "{{ item[1] }}.j2"
+    dest: "/var/lib/libvirt/images/{{item[0].name}}/{{ item[1] }}"
+    mode: "664"
+    force: no
+  become: yes
+  with_nested:
+    - "{{ libvirt_images }}"
+    - [ "meta-data", "user-data" ]
+
+- name: setup_libvirt | define VMs
+  vars:
+    libvirt_image_dir: "/var/lib/libvirt/images"
+  community.libvirt.virt:
+    command: define
+    xml: "{{ lookup('file', libvirt_image_dir + '/' + item + '/' + item + '.xml') }}"
+    uri: "qemu:///system"
+  become: yes
+  with_items: "{{ libvirt_images | map(attribute='name') | flatten }}"
+
+- name: setup_libvirt | start VMs
+  community.libvirt.virt:
+    name: "{{ item }}"
+    state: running
+    uri: "qemu:///system"
+  become: yes
+  with_items: "{{ libvirt_images | map(attribute='name') | flatten }}"
